@@ -1,4 +1,4 @@
-name: AWS Automation Project 1
+name: AWS Terraform Test
 
 on:
   push:
@@ -6,15 +6,15 @@ on:
       - main
 
 jobs:
-  deploy-and-scan:
-    name: Deploy Terraform
+  terraform:
+    name: Terraform Deploy
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.0.0
@@ -26,8 +26,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-2
 
-      - name: Check files
-        run: ls -la
+      - name: Check AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Test S3 state bucket access
+        run: aws s3 ls s3://remote-state-bucket-reggie/prd/
 
       - name: Terraform Init
         run: terraform init
