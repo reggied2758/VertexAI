@@ -1,4 +1,4 @@
-name: AWS Terraform Test
+name: AWS Terraform Deploy
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   terraform:
-    name: Terraform Deploy
+    name: Deploy Terraform
     runs-on: ubuntu-latest
 
     steps:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.0.0
+          terraform_version: 1.15.2
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -26,14 +26,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-2
 
-      - name: Check AWS identity
+      - name: Verify AWS identity
         run: aws sts get-caller-identity
 
-      - name: Test S3 state bucket access
+      - name: Check S3 Terraform state folder access
         run: aws s3 ls s3://remote-state-bucket-reggie/prd/
 
+      - name: Test Terraform state file access
+        run: aws s3 cp s3://remote-state-bucket-reggie/prd/terraform.tfstate -
+
+      - name: Check state encryption
+        run: aws s3api head-object --bucket remote-state-bucket-reggie --key prd/terraform.tfstate
+
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -input=false -reconfigure
 
       - name: Terraform Plan
         run: terraform plan
