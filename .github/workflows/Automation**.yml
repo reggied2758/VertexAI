@@ -17,7 +17,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.0.0
+          terraform_version: 1.15.2
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -35,8 +35,11 @@ jobs:
       - name: Test Terraform state file access
         run: aws s3 cp s3://remote-state-bucket-reggie/prd/terraform.tfstate -
 
+      - name: Check state encryption
+        run: aws s3api head-object --bucket remote-state-bucket-reggie --key prd/terraform.tfstate
+
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -input=false -reconfigure
 
       - name: Terraform Plan
         run: terraform plan
