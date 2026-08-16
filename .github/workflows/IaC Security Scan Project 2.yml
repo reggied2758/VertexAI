@@ -6,33 +6,23 @@ on:
       - main
 
 jobs:
-  deploy-and-scan:
-    name: Run IaC Security Scan
+  iac-scan:
+    name: IaC Scan
     runs-on: ubuntu-latest
 
     steps:
-        - name: Checkout repository
-          uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Install Trivy
-          run: |
-            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-            echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-            sudo apt-get update && sudo apt-get install -yq trivy
+      - name: Show Terraform files
+        run: |
+          echo "Terraform files:"
+          find . -name "*.tf" -type f -print
 
-  build:
-            name: IaC Scan
-            runs-on: ubuntu-latest
-            steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
-
-            - name: Run Trivy vulnerability scanner in fs mode
-              uses: aquasecurity/trivy-action@master
-              with:
-                scan-type: 'fs'
-                scanners: 'misconfig'
-                scan-ref: '.'
-                hide-progress: false
-                format: 'table'
-                ignore-unfixed: true
+      - name: Run Trivy IaC scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0'
